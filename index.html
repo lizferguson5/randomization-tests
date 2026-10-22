@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Randomization Test Lab</title>
+<meta name="description" content="BIOL 200 interactive lab: shuffle group labels to build a null distribution and calculate a randomization-test p-value.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f4ef; --panel:#ffffff; --ink:#1f2328; --muted:#5d636b; --line:#dcd8cf; --soft:#efece5;
+  --g1:#2f74b5; --g2:#d9772b; --bar:#9aa8b6; --hot:#c43d32; --ok:#2e7d4f; --callout:#eef4fa; --callout-line:#c4d7ea;
+  --btn:#1f2328; --btn-ink:#fff;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15171a; --panel:#1e2125; --ink:#e8e6e1; --muted:#a3a7ad; --line:#353a40; --soft:#272b30;
+    --g1:#6aa9e6; --g2:#f0a160; --bar:#6c7884; --hot:#ef6f63; --ok:#5fbf86; --callout:#1d2833; --callout-line:#2f455a;
+    --btn:#e8e6e1; --btn-ink:#15171a;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15171a; --panel:#1e2125; --ink:#e8e6e1; --muted:#a3a7ad; --line:#353a40; --soft:#272b30;
+  --g1:#6aa9e6; --g2:#f0a160; --bar:#6c7884; --hot:#ef6f63; --ok:#5fbf86; --callout:#1d2833; --callout-line:#2f455a;
+  --btn:#e8e6e1; --btn-ink:#15171a;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 "Source Sans 3",system-ui,sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:28px 16px 64px}
+header{margin-bottom:22px}
+.kicker{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+h1{font-family:"Source Serif 4",Georgia,serif;font-size:clamp(28px,5vw,40px);line-height:1.15;margin:6px 0 10px}
+h2{font-family:"Source Serif 4",Georgia,serif;font-size:24px;margin:0 0 4px;display:flex;gap:12px;align-items:baseline}
+h2 .num{font-family:"JetBrains Mono",monospace;font-size:14px;color:var(--muted);font-weight:500}
+.lede{color:var(--muted);max-width:68ch;margin:0}
+section.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px 20px;margin:18px 0}
+.sub{color:var(--muted);margin:0 0 14px}
+p{margin:0 0 12px}
+ul.tight{margin:0 0 14px;padding-left:20px}
+ul.tight li{margin:3px 0}
+.callout{background:var(--callout);border:1px solid var(--callout-line);border-radius:10px;padding:12px 14px;margin:12px 0}
+.callout b{font-weight:700}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}
+.stat{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--soft)}
+.stat .lab{font-size:13px;color:var(--muted);font-weight:600}
+.stat .val{font-family:"JetBrains Mono",monospace;font-size:22px;font-variant-numeric:tabular-nums}
+.stat .small{font-size:13px;color:var(--muted)}
+.stat.g1{border-left:5px solid var(--g1)} .stat.g2{border-left:5px solid var(--g2)} .stat.diff{border-left:5px solid var(--hot)}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+button{font:600 15px "Source Sans 3",sans-serif;border-radius:999px;padding:9px 16px;border:1.5px solid var(--btn);background:var(--btn);color:var(--btn-ink);cursor:pointer;min-height:40px}
+button.ghost{background:transparent;color:var(--ink)}
+button:disabled{opacity:.45;cursor:default}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--g1);outline-offset:2px}
+svg{display:block;width:100%;height:auto}
+svg text{fill:var(--muted);font:12px "Source Sans 3",sans-serif}
+svg .axis{stroke:var(--line)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:14px;color:var(--muted);margin:6px 0}
+.sw{display:inline-block;width:11px;height:11px;border-radius:50%;vertical-align:-1px;margin-right:5px}
+.readout{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px}
+.chip{display:inline-block;font-weight:700;font-size:14px;padding:2px 10px;border-radius:999px}
+.chip.yes{background:color-mix(in srgb,var(--hot) 18%,transparent);color:var(--hot)}
+.chip.no{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
+table{width:100%;border-collapse:collapse;font-size:15px;margin-top:8px}
+th,td{text-align:right;padding:5px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--muted);font-weight:600;font-size:13px}
+.formula{font-family:"JetBrains Mono",monospace;font-size:clamp(15px,3.4vw,19px);background:var(--soft);border-radius:10px;padding:12px 14px;margin:12px 0;overflow-wrap:anywhere}
+.formula .hot{color:var(--hot)}
+.verdict{font-weight:600;margin-top:6px}
+.tablewrap{overflow-x:auto}
+label{font-weight:600;font-size:14px;display:block;margin-bottom:4px}
+input[type=text],textarea,select{width:100%;font:15px "Source Sans 3",sans-serif;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--soft);color:var(--ink)}
+textarea{font-family:"JetBrains Mono",monospace;font-size:14px;min-height:64px;resize:vertical}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.err{color:var(--hot);font-weight:600;min-height:1.4em}
+.mono{font-family:"JetBrains Mono",monospace;font-variant-numeric:tabular-nums}
+footer{color:var(--muted);font-size:13px;margin-top:24px}
+.themebtn{float:right;font-size:13px;padding:5px 12px;min-height:32px}
+@media (max-width:620px){
+  .stats,.readout{grid-template-columns:1fr}
+  .two{grid-template-columns:1fr}
+  .stat .val{font-size:20px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <button class="ghost themebtn" id="themeBtn" type="button" aria-label="Toggle light or dark theme">Theme</button>
+  <div class="kicker">BIOL 200 · Nonparametric tests</div>
+  <h1>Shuffle the Labels: A Randomization Test Lab</h1>
+  <p class="lede">If the treatment really didn't matter, the group labels would be meaningless. Shuffle them yourself, thousands of times, and see how often chance alone produces a difference as big as the real one.</p>
+</header>
+
+<!-- STEP 1 -->
+<section class="card" id="s1">
+  <h2><span class="num">STEP 1</span>Meet the data</h2>
+  <p class="sub">Pseudoscorpion mating experiment</p>
+  <p>Female pseudoscorpions were mated either with <b>the same male twice (SM)</b> or with <b>two different males (DM)</b>. Researchers counted how many broods (egg clutches) each female produced.</p>
+  <p><b>Question:</b> does mating with two different males change reproductive success?</p>
+  <div class="callout"><b>Null hypothesis</b> H<sub>0</sub>: μ<sub>SM</sub> = μ<sub>DM</sub> (mating treatment has no effect on mean broods)<br>
+  <b>Alternative</b> H<sub>A</sub>: μ<sub>SM</sub> ≠ μ<sub>DM</sub></div>
+  <div class="stats">
+    <div class="stat g1"><div class="lab">Same male (SM)</div><div class="val" id="m1">–</div><div class="small" id="n1">–</div></div>
+    <div class="stat g2"><div class="lab">Different males (DM)</div><div class="val" id="m2">–</div><div class="small" id="n2">–</div></div>
+    <div class="stat diff"><div class="lab">Observed difference (SM − DM)</div><div class="val" id="obsv">–</div><div class="small">This is your threshold</div></div>
+  </div>
+  <p>Why not a t-test? The data are counts with lots of zeros, they aren't normal, and the distributions have different shapes. A randomization test needs <b>no</b> assumption about the shape of the data.</p>
+</section>
+
+<!-- STEP 2 -->
+<section class="card" id="s2">
+  <h2><span class="num">STEP 2</span>Shuffle the labels once</h2>
+  <p class="sub">What would the data look like if the labels didn't matter?</p>
+  <ul class="tight">
+    <li>Every female keeps her <b>real number of broods</b>; only her group label is reassigned at random.</li>
+    <li>The group sizes stay the same: <span id="sizesTxt">77 in SM and 72 in DM</span>.</li>
+    <li>Shuffling is <b>without replacement</b>: every value is used exactly once.</li>
+  </ul>
+  <div class="legend">
+    <span><span class="sw" style="background:var(--g1)"></span>Dot color = the female was really in SM</span>
+    <span><span class="sw" style="background:var(--g2)"></span>Dot color = the female was really in DM</span>
+  </div>
+  <svg id="dots" viewBox="0 0 680 300" role="img" aria-label="Dot plots of broods per female in each group, with group means marked"></svg>
+  <div class="btns">
+    <button id="shuf1" type="button">Shuffle labels</button>
+    <button id="real" class="ghost" type="button">Show real labels</button>
+  </div>
+  <div class="readout">
+    <div class="stat g1"><div class="lab" id="lab1">SM mean (now)</div><div class="val" id="sm1">–</div></div>
+    <div class="stat g2"><div class="lab" id="lab2">DM mean (now)</div><div class="val" id="sm2">–</div></div>
+    <div class="stat diff"><div class="lab">Difference (SM − DM)</div><div class="val" id="sd">–</div><div class="small" id="sdNote"></div></div>
+  </div>
+  <div class="tablewrap">
+  <table aria-label="Your most recent shuffles">
+    <thead><tr><th>Shuffle #</th><th>SM mean</th><th>DM mean</th><th>Difference</th><th>As extreme as ±<span class="thr">0.84</span>?</th></tr></thead>
+    <tbody id="hist1"><tr><td colspan="5" style="text-align:left;color:var(--muted)">No shuffles yet. Each shuffle you make here is also added to Step 3.</td></tr></tbody>
+  </table>
+  </div>
+</section>
+
+<!-- STEP 3 -->
+<section class="card" id="s3">
+  <h2><span class="num">STEP 3</span>Shuffle thousands of times</h2>
+  <p class="sub">Build the null distribution: the differences you get when only chance is at work.</p>
+  <div class="btns">
+    <button type="button" data-add="10">+10 shuffles</button>
+    <button type="button" data-add="100">+100</button>
+    <button type="button" data-add="1000">+1,000</button>
+    <button type="button" data-add="10000">+10,000</button>
+    <button type="button" class="ghost" id="clear">Start over</button>
+  </div>
+  <svg id="hist" viewBox="0 0 680 300" role="img" aria-label="Histogram of shuffled differences in means with the observed difference marked on both sides"></svg>
+  <div class="legend">
+    <span><span class="sw" style="background:var(--bar);border-radius:2px"></span>Shuffled difference less extreme than the real one</span>
+    <span><span class="sw" style="background:var(--hot);border-radius:2px"></span>As extreme or more (≤ −<span class="thr">0.84</span> or ≥ +<span class="thr">0.84</span>)</span>
+  </div>
+  <div class="readout">
+    <div class="stat"><div class="lab">Total shuffles (N)</div><div class="val" id="N">0</div></div>
+    <div class="stat"><div class="lab">≤ −<span class="thr">0.84</span> (left tail)</div><div class="val" id="L">0</div></div>
+    <div class="stat"><div class="lab">≥ +<span class="thr">0.84</span> (right tail)</div><div class="val" id="R">0</div></div>
+  </div>
+  <div class="formula" id="pform">p = (left + right + 1) ÷ (N + 1)</div>
+  <div class="verdict" id="verdict">Add some shuffles to calculate a p-value.</div>
+  <div class="callout"><b>Why two tails?</b> H<sub>A</sub> says the means are <i>different</i>, in either direction. A shuffle of −0.90 and one of +0.90 are equally surprising under H<sub>0</sub>, so both tails count.<br>
+  <b>Why the +1?</b> The real arrangement of labels is itself one of the arrangements that could happen under H<sub>0</sub>, so it is added to both the count and the total.</div>
+</section>
+
+<!-- STEP 4 -->
+<section class="card" id="s4">
+  <h2><span class="num">STEP 4</span>Try it with other data</h2>
+  <p class="sub">Paste in any two groups of numbers (separated by commas, spaces or new lines) and run the whole test.</p>
+  <div class="btns">
+    <button type="button" class="ghost" data-preset="tiny">Tiny sample (n = 5 each)</button>
+    <button type="button" class="ghost" data-preset="zeros">Zeros &amp; an outlier</button>
+    <button type="button" class="ghost" data-preset="same">Nearly identical groups</button>
+    <button type="button" class="ghost" data-preset="pseudo">Pseudoscorpions</button>
+  </div>
+  <p class="sub" id="presetNote" style="font-size:14px">Practice presets are made-up numbers for exploring; the pseudoscorpion preset is the lecture data.</p>
+  <div class="two">
+    <div><label for="aName">Group 1 name</label><input type="text" id="aName" value="Control"><label for="aVals" style="margin-top:8px">Group 1 values</label><textarea id="aVals"></textarea></div>
+    <div><label for="bName">Group 2 name</label><input type="text" id="bName" value="Treatment"><label for="bVals" style="margin-top:8px">Group 2 values</label><textarea id="bVals"></textarea></div>
+  </div>
+  <div class="btns" style="align-items:center">
+    <button type="button" id="runS">Run 10,000 shuffles</button>
+  </div>
+  <div class="err" id="sErr" role="alert"></div>
+  <div id="sOut" hidden>
+    <div class="stats">
+      <div class="stat g1"><div class="lab" id="sA">Group 1</div><div class="val" id="sAm">–</div><div class="small" id="sAn"></div></div>
+      <div class="stat g2"><div class="lab" id="sB">Group 2</div><div class="val" id="sBm">–</div><div class="small" id="sBn"></div></div>
+      <div class="stat diff"><div class="lab" id="sDlab">Observed difference</div><div class="val" id="sD">–</div><div class="small">Threshold</div></div>
+    </div>
+    <svg id="sHist" viewBox="0 0 680 300" role="img" aria-label="Histogram of shuffled differences for your data"></svg>
+    <div class="formula" id="sForm"></div>
+    <div class="verdict" id="sVerdict"></div>
+  </div>
+</section>
+
+<footer>Pseudoscorpion brood counts reconstructed from the lecture's frequency histogram (SM n = 77, DM n = 72). Each run uses fresh random shuffles, so your p-value will differ slightly from your classmates' and from the slides.</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const fmt = (x,d=2) => (x<0?"−":"") + Math.abs(x).toFixed(d);
+const fmtS = (x,d=2) => (x>0?"+":x<0?"−":"") + Math.abs(x).toFixed(d);
+const comma = n => n.toLocaleString("en-US");
+const EPS = 1e-9;
+
+/* theme toggle */
+$("themeBtn").addEventListener("click",()=>{
+  const r=document.documentElement;
+  const dark = r.dataset.theme ? r.dataset.theme==="dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  r.dataset.theme = dark ? "light" : "dark";
+});
+
+/* ---------- data ---------- */
+const expand = counts => { const a=[]; counts.forEach((c,v)=>{ for(let i=0;i<c;i++) a.push(v); }); return a; };
+const SM = expand([15,12,16,13,13,5,3]);       // broods 0..6
+const DM = expand([7,7,11,16,15,8,6,2]);      // broods 0..7
+const mean = a => a.reduce((s,x)=>s+x,0)/a.length;
+const n1 = SM.length, n2 = DM.length;
+const OBS = mean(SM) - mean(DM);
+const THR = Math.abs(OBS);
+
+$("m1").textContent = mean(SM).toFixed(2); $("n1").textContent = "n = "+n1+" females";
+$("m2").textContent = mean(DM).toFixed(2); $("n2").textContent = "n = "+n2+" females";
+$("obsv").textContent = fmt(OBS);
+$("sizesTxt").textContent = n1+" in SM and "+n2+" in DM";
+document.querySelectorAll(".thr").forEach(e=>e.textContent=THR.toFixed(2));
+
+/* ---------- shuffle engine (partial Fisher–Yates) ---------- */
+function makeEngine(a, b){
+  const all = Float64Array.from(a.concat(b));
+  const N = all.length, k = a.length, m = b.length;
+  let total = 0; for (const x of all) total += x;
+  return function(){
+    let s = 0;
+    for (let i=0;i<k;i++){
+      const j = i + Math.floor(Math.random()*(N-i));
+      const t = all[i]; all[i]=all[j]; all[j]=t;
+      s += all[i];
+    }
+    return s/k - (total-s)/m;
+  };
+}
+
+/* ---------- histogram ---------- */
+function niceStep(range, target){
+  const raw = range/target, p = Math.pow(10, Math.floor(Math.log10(raw)));
+  for (const f of [1,2,2.5,5,10]) if (f*p >= raw) return f*p;
+  return 10*p;
+}
+function drawHist(svg, diffs, obs, minRange){
+  const W=680,H=300,ml=46,mr=14,mt=26,mb=40;
+  const thr = Math.abs(obs);
+  let maxAbs = 0; for (const d of diffs) { const a=Math.abs(d); if (a>maxAbs) maxAbs=a; }
+  const R = Math.max(minRange||0, thr*1.4, maxAbs*1.05, 1e-6);
+  // bins aligned so the threshold sits exactly on a bin edge
+  let w, k;
+  if (thr > EPS){ k = Math.max(1, Math.round(thr/(R/24))); w = thr/k; }
+  else { k = Infinity; w = R/24; }
+  const nb = Math.ceil(R/w)+1;
+  const counts = new Map();
+  for (const d of diffs){
+    const b = d>=0 ? Math.floor(d/w+EPS) : -Math.floor(-d/w+EPS)-1;
+    counts.set(b,(counts.get(b)||0)+1);
+  }
+  let maxC = 1; counts.forEach(c=>{ if(c>maxC) maxC=c; });
+  const X = v => ml + (v + nb*w)/(2*nb*w)*(W-ml-mr);
+  const Y = c => H-mb - c/maxC*(H-mb-mt);
+  let s = "";
+  // y gridlines
+  const ys = niceStep(maxC,4);
+  for (let c=0;c<=maxC+EPS;c+=ys){
+    s += `<line class="axis" x1="${ml}" x2="${W-mr}" y1="${Y(c)}" y2="${Y(c)}" stroke-dasharray="${c===0?"":"2 4"}"/>`;
+    s += `<text x="${ml-6}" y="${Y(c)+4}" text-anchor="end">${comma(Math.round(c))}</text>`;
+  }
+  // bars
+  counts.forEach((c,b)=>{
+    const x0 = X(b*w), x1 = X((b+1)*w);
+    const hot = thr>EPS && (b>=k || b<=-k-1);
+    s += `<rect x="${x0+0.4}" y="${Y(c)}" width="${Math.max(0.6,x1-x0-0.8)}" height="${H-mb-Y(c)}" fill="var(${hot?"--hot":"--bar"})"/>`;
+  });
+  // x ticks
+  const xs = niceStep(2*nb*w, 8);
+  for (let v=-Math.floor(nb*w/xs)*xs; v<=nb*w+EPS; v+=xs){
+    const xv = X(v);
+    s += `<line class="axis" x1="${xv}" x2="${xv}" y1="${H-mb}" y2="${H-mb+5}"/>`;
+    s += `<text x="${xv}" y="${H-mb+19}" text-anchor="middle">${Math.abs(v)<EPS?"0":fmt(v,xs<0.1?2:xs<1?1:0)}</text>`;
+  }
+  s += `<text x="${(ml+W-mr)/2}" y="${H-4}" text-anchor="middle">Shuffled difference in means</text>`;
+  // threshold lines
+  if (thr>EPS){
+    for (const sg of [-1,1]){
+      const xv = X(sg*thr);
+      s += `<line x1="${xv}" x2="${xv}" y1="${mt-8}" y2="${H-mb}" stroke="var(--hot)" stroke-width="2" stroke-dasharray="5 4"/>`;
+      s += `<text x="${xv}" y="${mt-12}" text-anchor="middle" style="fill:var(--hot);font-weight:700">${sg<0?"−":"+"}${thr.toFixed(2)}</text>`;
+    }
+  }
+  if (!diffs.length) s += `<text x="${(ml+W-mr)/2}" y="${H/2}" text-anchor="middle" style="font-size:15px">No shuffles yet</text>`;
+  svg.innerHTML = s;
+}
+function countTails(diffs, thr){
+  let L=0,R=0;
+  for (const d of diffs){ if (d <= -thr+EPS) L++; else if (d >= thr-EPS) R++; }
+  return [L,R];
+}
+function pText(L,R,N){
+  const p = (L+R+1)/(N+1);
+  return {p, html:`p = (<span class="hot">${comma(L)}</span> + <span class="hot">${comma(R)}</span> + 1) ÷ (${comma(N)} + 1) = ${comma(L+R+1)} ÷ ${comma(N+1)} = <b>${p<0.001?p.toFixed(4):p.toFixed(3)}</b>`};
+}
+function verdictText(p, N){
+  if (N < 1000) return `With only ${comma(N)} shuffles the p-value is rough. Keep going to at least 10,000.`;
+  return p < 0.05
+    ? `p < 0.05, so we reject H₀: a difference this large rarely happens when labels are assigned at random.`
+    : `p ≥ 0.05, so we fail to reject H₀: differences this large happen often enough by chance alone.`;
+}
+
+/* ---------- STEP 3 state ---------- */
+const nullDiffs = [];
+const engine = makeEngine(SM, DM);
+const histSvg = $("hist");
+function renderS3(){
+  drawHist(histSvg, nullDiffs, OBS, 1.3);
+  const N = nullDiffs.length, [L,R] = countTails(nullDiffs, THR);
+  $("N").textContent = comma(N); $("L").textContent = comma(L); $("R").textContent = comma(R);
+  if (N===0){ $("pform").innerHTML = "p = (left + right + 1) ÷ (N + 1)"; $("verdict").textContent = "Add some shuffles to calculate a p-value."; return; }
+  const t = pText(L,R,N); $("pform").innerHTML = t.html; $("verdict").textContent = verdictText(t.p, N);
+}
+let busy = false;
+function addMany(n){
+  if (busy) return; busy = true;
+  const btns = document.querySelectorAll("[data-add],#clear"); btns.forEach(b=>b.disabled=true);
+  const frames = n<=10 ? n : Math.min(45, Math.ceil(n/50));
+  let done = 0, f = 0;
+  (function step(){
+    f++;
+    const target = Math.round(n*f/frames);
+    while (done < target){ nullDiffs.push(engine()); done++; }
+    renderS3();
+    if (done < n) requestAnimationFrame(step);
+    else { busy=false; btns.forEach(b=>b.disabled=false); }
+  })();
+}
+document.querySelectorAll("[data-add]").forEach(b=>b.addEventListener("click",()=>addMany(+b.dataset.add)));
+$("clear").addEventListener("click",()=>{ nullDiffs.length=0; shufCount=0; recent.length=0; renderRecent(); renderS3(); });
+
+/* ---------- STEP 2: dot plot ---------- */
+const tokens = SM.map((v,i)=>({v,orig:0,cur:0,id:i})).concat(DM.map((v,i)=>({v,orig:1,cur:1,id:n1+i})));
+const dotsSvg = $("dots");
+const XV = v => 70 + v*80;
+const BASE = [128, 252];
+let s = "";
+for (const g of [0,1]){
+  s += `<line class="axis" x1="40" x2="660" y1="${BASE[g]}" y2="${BASE[g]}"/>`;
+  s += `<text x="40" y="${BASE[g]-104}" style="font-weight:700;font-size:13px;fill:var(${g?"--g2":"--g1"})">${g?"Different males (DM)":"Same male (SM)"}</text>`;
+  s += `<g id="mean${g}"><line y1="${BASE[g]-100}" y2="${BASE[g]+4}" stroke="var(--ink)" stroke-width="2"/><text y="${BASE[g]-90}" text-anchor="start" style="fill:var(--ink);font-weight:700" id="meanT${g}"></text></g>`;
+}
+for (let v=0; v<=7; v++) s += `<text x="${XV(v)}" y="272" text-anchor="middle">${v}</text>`;
+s += `<text x="350" y="294" text-anchor="middle">Number of broods per female</text>`;
+s += `<g id="dotLayer"></g>`;
+dotsSvg.innerHTML = s;
+const layer = $("dotLayer");
+const circ = tokens.map(t=>{
+  const c = document.createElementNS("http://www.w3.org/2000/svg","circle");
+  c.setAttribute("r","4.6"); c.setAttribute("cx","0"); c.setAttribute("cy","0");
+  c.setAttribute("fill", t.orig? "var(--g2)" : "var(--g1)");
+  c.style.transition = "transform .7s cubic-bezier(.4,.1,.2,1)";
+  layer.appendChild(c); return c;
+});
+function placeDots(){
+  const groups = [[],[]];
+  tokens.forEach((t,i)=>groups[t.cur].push(i));
+  for (const g of [0,1]){
+    const byV = {};
+    groups[g].sort((a,b)=>tokens[a].orig-tokens[b].orig || a-b).forEach(i=>{ (byV[tokens[i].v] ||= []).push(i); });
+    for (const v in byV) byV[v].forEach((i,j)=>{
+      const x = XV(+v) + ((j%5)-2)*11, y = BASE[g] - 8 - Math.floor(j/5)*11;
+      circ[i].style.transform = `translate(${x}px,${y}px)`;
+    });
+    const m = mean(groups[g].map(i=>tokens[i].v));
+    const mg = $("mean"+g);
+    mg.style.transition = "transform .7s cubic-bezier(.4,.1,.2,1)";
+    mg.style.transform = `translateX(${XV(m)}px)`;
+    $("meanT"+g).setAttribute("x", 6);
+    $("meanT"+g).textContent = "mean " + m.toFixed(2);
+  }
+  const m1 = mean(groups[0].map(i=>tokens[i].v)), m2 = mean(groups[1].map(i=>tokens[i].v));
+  return [m1,m2,m1-m2];
+}
+let shufCount = 0; const recent = [];
+let isReal = true;
+function updateReadout(m1,m2,d){
+  $("sm1").textContent = m1.toFixed(2); $("sm2").textContent = m2.toFixed(2); $("sd").textContent = fmtS(d);
+  $("lab1").textContent = isReal ? "SM mean (real labels)" : "SM mean (shuffled)";
+  $("lab2").textContent = isReal ? "DM mean (real labels)" : "DM mean (shuffled)";
+  if (isReal) $("sdNote").innerHTML = "The real, observed difference";
+  else { const ext = Math.abs(d) >= THR-EPS; $("sdNote").innerHTML = ext ? `<span class="chip yes">As extreme as ±${THR.toFixed(2)}</span>` : `<span class="chip no">Less extreme than ±${THR.toFixed(2)}</span>`; }
+}
+function renderRecent(){
+  const tb = $("hist1");
+  if (!recent.length){ tb.innerHTML = `<tr><td colspan="5" style="text-align:left;color:var(--muted)">No shuffles yet. Each shuffle you make here is also added to Step 3.</td></tr>`; return; }
+  tb.innerHTML = recent.map(r=>`<tr><td>${r.n}</td><td>${r.m1.toFixed(2)}</td><td>${r.m2.toFixed(2)}</td><td>${fmtS(r.d)}</td><td>${Math.abs(r.d)>=THR-EPS?'<span class="chip yes">Yes</span>':'<span class="chip no">No</span>'}</td></tr>`).join("");
+}
+$("shuf1").addEventListener("click",()=>{
+  const labels = Array(n1).fill(0).concat(Array(n2).fill(1));
+  for (let i=labels.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [labels[i],labels[j]]=[labels[j],labels[i]]; }
+  tokens.forEach((t,i)=>t.cur=labels[i]);
+  isReal = false;
+  const [m1,m2,d] = placeDots();
+  updateReadout(m1,m2,d);
+  shufCount++; recent.unshift({n:shufCount,m1,m2,d}); if (recent.length>6) recent.pop();
+  renderRecent();
+  nullDiffs.push(d); renderS3();
+});
+$("real").addEventListener("click",()=>{
+  tokens.forEach(t=>t.cur=t.orig); isReal = true;
+  const [m1,m2,d] = placeDots(); updateReadout(m1,m2,d);
+});
+
+/* ---------- STEP 4: sandbox ---------- */
+const presets = {
+  tiny:  {a:"Control", av:"3, 5, 2, 4, 6", b:"Fertilized", bv:"7, 9, 6, 10, 8"},
+  zeros: {a:"Upstream", av:"0, 0, 1, 0, 2, 0, 0, 3, 0, 1", b:"Downstream", bv:"0, 2, 0, 1, 0, 0, 1, 0, 0, 24"},
+  same:  {a:"Site A", av:"12.1, 14.3, 11.8, 13.5, 12.9, 15.0, 13.2, 12.4", b:"Site B", bv:"13.0, 12.2, 14.1, 12.7, 13.8, 11.9, 14.6, 12.8"},
+  pseudo:{a:"SM", av:SM.join(", "), b:"DM", bv:DM.join(", ")}
+};
+function loadPreset(k){
+  const p = presets[k];
+  $("aName").value=p.a; $("aVals").value=p.av; $("bName").value=p.b; $("bVals").value=p.bv;
+  $("sOut").hidden = true; $("sErr").textContent = "";
+}
+document.querySelectorAll("[data-preset]").forEach(b=>b.addEventListener("click",()=>loadPreset(b.dataset.preset)));
+loadPreset("tiny");
+function parse(str){
+  const parts = str.split(/[\s,;]+/).filter(Boolean);
+  const out = [];
+  for (const p of parts){ const x = Number(p); if (!isFinite(x)) return {bad:p}; out.push(x); }
+  return {vals:out};
+}
+$("runS").addEventListener("click",()=>{
+  const A = parse($("aVals").value), B = parse($("bVals").value);
+  const an = $("aName").value.trim() || "Group 1", bn = $("bName").value.trim() || "Group 2";
+  if (A.bad || B.bad){ $("sErr").textContent = `"${A.bad||B.bad}" isn't a number. Use numbers separated by commas or spaces.`; $("sOut").hidden=true; return; }
+  if (A.vals.length<2 || B.vals.length<2){ $("sErr").textContent = "Each group needs at least 2 values."; $("sOut").hidden=true; return; }
+  $("sErr").textContent = "";
+  const a=A.vals, b=B.vals, obs = mean(a)-mean(b), thr=Math.abs(obs);
+  const eng = makeEngine(a,b), N=10000, diffs=new Array(N);
+  for (let i=0;i<N;i++) diffs[i]=eng();
+  $("sA").textContent=an; $("sB").textContent=bn;
+  $("sAm").textContent="mean "+mean(a).toFixed(2); $("sAn").textContent="n = "+a.length;
+  $("sBm").textContent="mean "+mean(b).toFixed(2); $("sBn").textContent="n = "+b.length;
+  $("sDlab").textContent=`Observed difference (${an} − ${bn})`; $("sD").textContent=fmt(obs);
+  $("sOut").hidden=false;
+  drawHist($("sHist"), diffs, obs, 0);
+  const [L,R] = countTails(diffs, thr), t = pText(L,R,N);
+  $("sForm").innerHTML = t.html;
+  $("sVerdict").textContent = thr<EPS ? "The two means are identical, so every shuffle is at least as extreme: p = 1." : verdictText(t.p, N);
+});
+
+/* init */
+const [a0,b0,d0] = placeDots(); updateReadout(a0,b0,d0); renderS3();
+})();
+</script>
+</body>
+</html>
