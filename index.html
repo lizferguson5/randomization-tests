@@ -27,6 +27,7 @@
   --btn:#e8e6e1; --btn-ink:#15171a;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 "Source Sans 3",system-ui,sans-serif}
 .wrap{max-width:900px;margin:0 auto;padding:28px 16px 64px}
@@ -79,6 +80,23 @@ textarea{font-family:"JetBrains Mono",monospace;font-size:14px;min-height:64px;r
 .mono{font-family:"JetBrains Mono",monospace;font-variant-numeric:tabular-nums}
 footer{color:var(--muted);font-size:13px;margin-top:24px}
 .themebtn{float:right;font-size:13px;padding:5px 12px;min-height:32px}
+.tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin:4px 0 0;flex-wrap:wrap}
+.tabs button{border-radius:10px 10px 0 0;background:transparent;color:var(--muted);border:1px solid transparent;border-bottom:none;padding:10px 16px;min-height:44px}
+.tabs button[aria-selected="true"]{background:var(--panel);color:var(--ink);border-color:var(--line);margin-bottom:-1px}
+.tabs button:hover{color:var(--ink)}
+.filebtn{display:inline-flex;align-items:center;font:600 15px "Source Sans 3",sans-serif;border-radius:999px;padding:9px 16px;border:1.5px solid var(--btn);background:var(--btn);color:var(--btn-ink);cursor:pointer;min-height:40px;margin:0}
+.filebtn:focus-within{outline:3px solid var(--g1);outline-offset:2px}
+.filebtn input{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.selgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:12px 0}
+.note{font-size:14px;color:var(--muted)}
+.ex{font-size:14px}
+.ex table{font-size:13px;margin-top:4px;background:var(--panel)}
+.ex td,.ex th{text-align:left;padding:3px 8px}
+.radios{display:flex;gap:18px;flex-wrap:wrap;margin:4px 0 8px}
+.radios label{font-weight:400;font-size:15px;display:flex;gap:6px;align-items:center;margin:0}
+.placeholder{color:var(--muted);font-style:italic}
+.summary{background:var(--soft);border-left:5px solid var(--g1);border-radius:8px;padding:12px 14px;margin:12px 0}
+.stat .val.sm{font-size:18px}
 @media (max-width:620px){
   .stats,.readout{grid-template-columns:1fr}
   .two{grid-template-columns:1fr}
@@ -94,6 +112,13 @@ footer{color:var(--muted);font-size:13px;margin-top:24px}
   <h1>Shuffle the Labels: A Randomization Test Lab</h1>
   <p class="lede">If the treatment really didn't matter, the group labels would be meaningless. Shuffle them yourself, thousands of times, and see how often chance alone produces a difference as big as the real one.</p>
 </header>
+
+<nav class="tabs" role="tablist" id="tablist" aria-label="App sections">
+  <button type="button" role="tab" id="tb-lab" aria-selected="true" aria-controls="tab-lab">Lecture lab: pseudoscorpions</button>
+  <button type="button" role="tab" id="tb-data" aria-selected="false" aria-controls="tab-data" tabindex="-1">Analyze your own data</button>
+</nav>
+
+<div id="tab-lab" role="tabpanel" aria-labelledby="tb-lab">
 
 <!-- STEP 1 -->
 <section class="card" id="s1">
@@ -198,7 +223,138 @@ footer{color:var(--muted);font-size:13px;margin-top:24px}
     <div class="formula" id="sForm"></div>
     <div class="verdict" id="sVerdict"></div>
   </div>
+  <p class="note" style="margin-top:12px">Have your own data in a spreadsheet? <button type="button" class="ghost" id="goData" style="min-height:32px;padding:4px 12px;font-size:14px">Analyze a CSV file →</button></p>
 </section>
+</div><!-- /tab-lab -->
+
+<!-- ================= YOUR DATA TAB ================= -->
+<div id="tab-data" role="tabpanel" aria-labelledby="tb-data" hidden>
+
+<section class="card" id="u1">
+  <h2><span class="num">STEP 1</span>Load your data</h2>
+  <p class="sub">Upload a CSV file with measurements from two groups.</p>
+  <div class="callout">
+    <b>How your file should look</b>
+    <ul class="tight" style="margin-top:6px">
+      <li>Save it as a <b>.csv</b> file. In Excel: File → Save As → <i>CSV UTF-8 (Comma delimited)</i>. In Google Sheets: File → Download → <i>Comma-separated values</i>.</li>
+      <li>The <b>first row holds column names</b>.</li>
+      <li>Each measurement is a <b>number only</b>: write <code>12.5</code>, not <code>12.5 cm</code>. Blank cells are skipped.</li>
+      <li>The two groups must be <b>independent</b>: different individuals in each group. Paired data, such as before-and-after measurements on the same individuals, need a different test.</li>
+      <li>Use either layout below. The app usually detects which one you have.</li>
+    </ul>
+    <div class="two ex">
+      <div><b>Layout A: group column + value column</b> (one row per individual)
+        <table><thead><tr><th>treatment</th><th>growth_cm</th></tr></thead>
+        <tbody><tr><td>Control</td><td>4.1</td></tr><tr><td>Control</td><td>5.3</td></tr><tr><td>Fertilized</td><td>6.8</td></tr><tr><td>Fertilized</td><td>7.4</td></tr><tr><td>…</td><td>…</td></tr></tbody></table>
+        <p class="note" style="margin:6px 0 0">Group names must be spelled the same way every time: "Control" and "control" count as two different groups. If there are more than two groups, you'll pick which two to compare.</p>
+      </div>
+      <div><b>Layout B: one column per group</b>
+        <table><thead><tr><th>Control</th><th>Fertilized</th></tr></thead>
+        <tbody><tr><td>4.1</td><td>6.8</td></tr><tr><td>5.3</td><td>7.4</td></tr><tr><td>3.8</td><td>5.9</td></tr><tr><td>…</td><td>…</td></tr></tbody></table>
+        <p class="note" style="margin:6px 0 0">The columns can be different lengths; leave the extra cells blank.</p>
+      </div>
+    </div>
+  </div>
+  <div class="btns" style="align-items:center">
+    <label class="filebtn">Choose CSV file<input type="file" id="csvFile" accept=".csv,.txt,text/csv"></label>
+    <button type="button" class="ghost" id="exLoad">Try example data</button>
+    <button type="button" class="ghost" id="exDlA">Download example (Layout A)</button>
+    <button type="button" class="ghost" id="exDlB">Download example (Layout B)</button>
+  </div>
+  <div class="err" id="uErr" role="alert"></div>
+  <div id="uLoaded" hidden>
+    <p id="uFileInfo" style="margin-bottom:6px"></p>
+    <div class="tablewrap"><table id="uPreview" aria-label="First rows of your file"></table></div>
+    <p style="margin:14px 0 4px"><b>Check how your data were read</b></p>
+    <div class="radios" role="radiogroup" aria-label="Data layout">
+      <label><input type="radio" name="layout" value="long" checked> Layout A: group column + value column</label>
+      <label><input type="radio" name="layout" value="wide"> Layout B: one column per group</label>
+    </div>
+    <div class="selgrid" id="longSel">
+      <div><label for="gCol">Column with group names</label><select id="gCol"></select></div>
+      <div><label for="vCol">Column with measurements</label><select id="vCol"></select></div>
+      <div><label for="g1Sel">Group 1</label><select id="g1Sel"></select></div>
+      <div><label for="g2Sel">Group 2</label><select id="g2Sel"></select></div>
+    </div>
+    <div class="selgrid" id="wideSel" hidden>
+      <div><label for="w1Col">Group 1 column</label><select id="w1Col"></select></div>
+      <div><label for="w2Col">Group 2 column</label><select id="w2Col"></select></div>
+    </div>
+    <div class="err" id="uErr2" role="alert"></div>
+    <p class="note" id="uSkip"></p>
+  </div>
+</section>
+
+<section class="card" id="u2" hidden>
+  <h2><span class="num">STEP 2</span>Look at your data</h2>
+  <p class="sub">Check the groups before testing anything.</p>
+  <div class="stats">
+    <div class="stat g1"><div class="lab" id="u2n1">Group 1</div><div class="val sm" id="u2m1"></div><div class="small" id="u2d1"></div></div>
+    <div class="stat g2"><div class="lab" id="u2n2">Group 2</div><div class="val sm" id="u2m2"></div><div class="small" id="u2d2"></div></div>
+    <div class="stat diff"><div class="lab" id="u2dl">Observed difference</div><div class="val sm" id="u2obs"></div><div class="small" id="u2obs2"></div></div>
+  </div>
+  <div class="legend">
+    <span><span class="sw" style="background:var(--g1)"></span><span id="u2lg1">Group 1</span></span>
+    <span><span class="sw" style="background:var(--g2)"></span><span id="u2lg2">Group 2</span></span>
+    <span id="u2lgm">Vertical line = group mean</span>
+  </div>
+  <svg id="uStrip" viewBox="0 0 680 220" role="img" aria-label="Strip plot of each group's values"></svg>
+  <p class="note" id="uSampleNote"></p>
+  <p style="margin-top:10px"><b>Preview one shuffle.</b> Each value keeps its number; only its group label is reshuffled. Dot colors show each value's real group.</p>
+  <div class="btns">
+    <button type="button" id="uShuf">Shuffle labels once</button>
+    <button type="button" class="ghost" id="uReal">Show real labels</button>
+  </div>
+  <p id="uShufOut" class="note" aria-live="polite"></p>
+</section>
+
+<section class="card" id="u3" hidden>
+  <h2><span class="num">STEP 3</span>Set up and run the test</h2>
+  <p class="sub">Choose what to compare, then shuffle thousands of times.</p>
+  <div class="selgrid">
+    <div><label for="uStat">Compare</label><select id="uStat"><option value="mean">Difference in means</option><option value="median">Difference in medians</option></select></div>
+    <div><label for="uAlt">Alternative hypothesis</label><select id="uAlt"></select></div>
+    <div><label for="uAlpha">Significance level (α)</label><select id="uAlpha"><option value="0.05" selected>0.05</option><option value="0.01">0.01</option><option value="0.10">0.10</option></select></div>
+  </div>
+  <div class="callout" id="uHyp"></div>
+  <p class="note">Not sure? Use <b>difference in means</b> and the <b>two-sided</b> alternative, as in the lecture example. Choose a one-sided test only if you predicted the direction before collecting the data.</p>
+  <p style="margin:14px 0 4px"><b>Run the test in two stages:</b></p>
+  <ol class="tight">
+    <li><b>Quick check (1,000 shuffles):</b> makes sure everything is set up correctly and shows roughly what the result will be.</li>
+    <li><b>Final result (10,000 shuffles):</b> gives a more precise p-value. Report this one.</li>
+  </ol>
+  <div class="btns" style="align-items:center">
+    <button type="button" id="uRun1">1. Run 1,000 shuffles (quick check)</button>
+    <button type="button" id="uRun10" disabled>2. Run 10,000 shuffles (final result)</button>
+  </div>
+  <p class="note" id="uProg" aria-live="polite"></p>
+</section>
+
+<section class="card" id="u4" hidden>
+  <h2><span class="num">STEP 4</span>Your result</h2>
+  <p class="sub" id="u4sub"></p>
+  <div class="callout" id="u4quick" hidden><b>This is the quick check.</b> Scroll up to Step 3 and run 10,000 shuffles for your final result.</div>
+  <svg id="uHist" viewBox="0 0 680 300" role="img" aria-label="Histogram of shuffled differences with your observed difference marked"></svg>
+  <div class="legend">
+    <span><span class="sw" style="background:var(--bar);border-radius:2px"></span>Less extreme than your observed difference</span>
+    <span><span class="sw" style="background:var(--hot);border-radius:2px"></span>As extreme or more</span>
+  </div>
+  <div class="readout" id="uCounts"></div>
+  <div class="formula" id="uForm"></div>
+  <div class="verdict" id="uVerdict"></div>
+  <p class="note" id="uNotes"></p>
+  <div class="summary" id="uSummary"></div>
+  <div class="btns">
+    <button type="button" class="ghost" id="uCopy">Copy result summary</button>
+    <button type="button" class="ghost" id="uDl">Download shuffled differences (.csv)</button>
+  </div>
+</section>
+
+<section class="card" id="uWait">
+  <p class="placeholder" style="margin:0">Load a CSV file or try the example data in Step 1 to continue.</p>
+</section>
+
+</div><!-- /tab-data -->
 
 <footer>Pseudoscorpion brood counts reconstructed from the lecture's frequency histogram (SM n = 77, DM n = 72). Each run uses fresh random shuffles, so your p-value will differ slightly from your classmates' and from the slides.<br>© 2026 Liz Ferguson · Code: <a href="https://opensource.org/license/mit" style="color:inherit">MIT</a> · Content: <a href="https://creativecommons.org/licenses/by/4.0/" style="color:inherit">CC BY 4.0</a></footer>
 </div>
@@ -256,21 +412,29 @@ function niceStep(range, target){
   for (const f of [1,2,2.5,5,10]) if (f*p >= raw) return f*p;
   return 10*p;
 }
-function drawHist(svg, diffs, obs, minRange){
-  const W=680,H=300,ml=46,mr=14,mt=26,mb=40;
+function drawHist(svg, diffs, obs, minRange, tail, dec){
+  tail = tail || "two"; if (dec == null) dec = 2;
+  const W=680,H=300,ml=50,mr=14,mt=26,mb=40;
   const thr = Math.abs(obs);
   let maxAbs = 0; for (const d of diffs) { const a=Math.abs(d); if (a>maxAbs) maxAbs=a; }
-  const R = Math.max(minRange||0, thr*1.4, maxAbs*1.05, 1e-6);
-  // bins aligned so the threshold sits exactly on a bin edge
-  let w, k;
-  if (thr > EPS){ k = Math.max(1, Math.round(thr/(R/24))); w = thr/k; }
-  else { k = Infinity; w = R/24; }
-  const nb = Math.ceil(R/w)+1;
-  const counts = new Map();
-  for (const d of diffs){
-    const b = d>=0 ? Math.floor(d/w+EPS) : -Math.floor(-d/w+EPS)-1;
-    counts.set(b,(counts.get(b)||0)+1);
+  const Rg = Math.max(minRange||0, thr*1.4, maxAbs*1.05, 1e-9);
+  // bins are aligned so the observed value sits exactly on a bin edge,
+  // with ties placed on the "extreme" side of that edge
+  let w, k = Infinity, binOf, lo, isHot;
+  if (tail === "two"){
+    if (thr > EPS){ k = Math.max(1, Math.round(thr/(Rg/24))); w = thr/k; } else w = Rg/24;
+    binOf = d => d>=0 ? Math.floor(d/w+EPS) : -Math.floor(-d/w+EPS)-1;
+    lo = b => b*w;
+    isHot = b => thr>EPS && (b>=k || b<=-k-1);
+  } else {
+    w = Rg/24;
+    if (tail === "greater"){ binOf = d => Math.floor((d-obs)/w+EPS); isHot = b => b>=0; }
+    else { binOf = d => Math.ceil((d-obs)/w-EPS)-1; isHot = b => b<=-1; }
+    lo = b => obs + b*w;
   }
+  const nb = Math.ceil(Rg/w)+1;
+  const counts = new Map();
+  for (const d of diffs){ const b = binOf(d); counts.set(b,(counts.get(b)||0)+1); }
   let maxC = 1; counts.forEach(c=>{ if(c>maxC) maxC=c; });
   const X = v => ml + (v + nb*w)/(2*nb*w)*(W-ml-mr);
   const Y = c => H-mb - c/maxC*(H-mb-mt);
@@ -283,25 +447,24 @@ function drawHist(svg, diffs, obs, minRange){
   }
   // bars
   counts.forEach((c,b)=>{
-    const x0 = X(b*w), x1 = X((b+1)*w);
-    const hot = thr>EPS && (b>=k || b<=-k-1);
-    s += `<rect x="${x0+0.4}" y="${Y(c)}" width="${Math.max(0.6,x1-x0-0.8)}" height="${H-mb-Y(c)}" fill="var(${hot?"--hot":"--bar"})"/>`;
+    const x0 = X(lo(b)), x1 = X(lo(b)+w);
+    s += `<rect x="${x0+0.4}" y="${Y(c)}" width="${Math.max(0.6,x1-x0-0.8)}" height="${H-mb-Y(c)}" fill="var(${isHot(b)?"--hot":"--bar"})"/>`;
   });
   // x ticks
-  const xs = niceStep(2*nb*w, 8);
-  for (let v=-Math.floor(nb*w/xs)*xs; v<=nb*w+EPS; v+=xs){
-    const xv = X(v);
+  const xs = Number(niceStep(2*nb*w, 8).toPrecision(6));
+  const xd = Math.min(6, (String(xs).split(".")[1]||"").length);
+  for (let i=-Math.floor(nb*w/xs); i*xs<=nb*w+EPS; i++){
+    const v = i*xs, xv = X(v);
     s += `<line class="axis" x1="${xv}" x2="${xv}" y1="${H-mb}" y2="${H-mb+5}"/>`;
-    s += `<text x="${xv}" y="${H-mb+19}" text-anchor="middle">${Math.abs(v)<EPS?"0":fmt(v,xs<0.1?2:xs<1?1:0)}</text>`;
+    s += `<text x="${xv}" y="${H-mb+19}" text-anchor="middle">${i===0?"0":fmt(v,xd)}</text>`;
   }
-  s += `<text x="${(ml+W-mr)/2}" y="${H-4}" text-anchor="middle">Shuffled difference in means</text>`;
+  s += `<text x="${(ml+W-mr)/2}" y="${H-4}" text-anchor="middle">${svg.dataset.xlab||"Shuffled difference in means"}</text>`;
   // threshold lines
-  if (thr>EPS){
-    for (const sg of [-1,1]){
-      const xv = X(sg*thr);
-      s += `<line x1="${xv}" x2="${xv}" y1="${mt-8}" y2="${H-mb}" stroke="var(--hot)" stroke-width="2" stroke-dasharray="5 4"/>`;
-      s += `<text x="${xv}" y="${mt-12}" text-anchor="middle" style="fill:var(--hot);font-weight:700">${sg<0?"−":"+"}${thr.toFixed(2)}</text>`;
-    }
+  const marks = tail==="two" ? (thr>EPS ? [-thr, thr] : []) : [obs];
+  for (const m of marks){
+    const xv = X(m);
+    s += `<line x1="${xv}" x2="${xv}" y1="${mt-8}" y2="${H-mb}" stroke="var(--hot)" stroke-width="2" stroke-dasharray="5 4"/>`;
+    s += `<text x="${xv}" y="${mt-12}" text-anchor="middle" style="fill:var(--hot);font-weight:700">${fmtS(m,dec)}</text>`;
   }
   if (!diffs.length) s += `<text x="${(ml+W-mr)/2}" y="${H/2}" text-anchor="middle" style="font-size:15px">No shuffles yet</text>`;
   svg.innerHTML = s;
@@ -462,6 +625,368 @@ $("runS").addEventListener("click",()=>{
   const [L,R] = countTails(diffs, thr), t = pText(L,R,N);
   $("sForm").innerHTML = t.html;
   $("sVerdict").textContent = thr<EPS ? "The two means are identical, so every shuffle is at least as extreme: p = 1." : verdictText(t.p, N);
+});
+
+/* ===================== TABS ===================== */
+const TABS = [["tb-lab","tab-lab"],["tb-data","tab-data"]];
+function showTab(id){
+  TABS.forEach(([b,p])=>{ const on = b===id; $(b).setAttribute("aria-selected", on); $(b).tabIndex = on?0:-1; $(p).hidden = !on; });
+  try { history.replaceState(null, "", id==="tb-data" ? "#your-data" : location.pathname + location.search); } catch(e){}
+}
+TABS.forEach(([b])=>$(b).addEventListener("click",()=>{ showTab(b); window.scrollTo(0,0); }));
+$("tablist").addEventListener("keydown",e=>{
+  if (e.key!=="ArrowRight" && e.key!=="ArrowLeft") return;
+  const i = TABS.findIndex(t=>t[0]===document.activeElement.id); if (i<0) return;
+  const n = TABS[(i + (e.key==="ArrowRight"?1:TABS.length-1)) % TABS.length][0];
+  showTab(n); $(n).focus();
+});
+$("goData").addEventListener("click",()=>{ showTab("tb-data"); window.scrollTo(0,0); });
+if (location.hash === "#your-data") showTab("tb-data");
+
+/* ===================== YOUR DATA ===================== */
+const U = { diffs:null, busy:false };
+const esc = s => String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const median = a => { const s = Float64Array.from(a).sort(), n=s.length, m=n>>1; return n%2 ? s[m] : (s[m-1]+s[m])/2; };
+const sd = a => { const m=mean(a); let s=0; for (const x of a) s+=(x-m)*(x-m); return Math.sqrt(s/(a.length-1)); };
+let DEC = 2;
+const nf = x => fmt(x, DEC), nfs = x => fmtS(x, DEC);
+function uErr(id,msg){ $(id).textContent = msg||""; }
+
+/* CSV parsing */
+function parseCSV(text){
+  text = text.replace(/^﻿/, "");
+  const first = text.split(/\r?\n/).find(l=>l.trim()!=="") || "";
+  let delim = ",", best = -1;
+  for (const c of [",",";","\t"]){ const n = first.split(c).length-1; if (n>best){ best=n; delim=c; } }
+  const rows=[]; let row=[], f="", q=false;
+  for (let i=0;i<text.length;i++){
+    const ch = text[i];
+    if (q){ if (ch==='"'){ if (text[i+1]==='"'){ f+='"'; i++; } else q=false; } else f+=ch; }
+    else if (ch==='"') q = true;
+    else if (ch===delim){ row.push(f); f=""; }
+    else if (ch==="\n" || ch==="\r"){ if (ch==="\r" && text[i+1]==="\n") i++; row.push(f); rows.push(row); row=[]; f=""; }
+    else f += ch;
+  }
+  if (f!=="" || row.length){ row.push(f); rows.push(row); }
+  const clean = rows.filter(r=>r.some(c=>c.trim()!==""));
+  const seen = {};
+  const headers = (clean.shift()||[]).map((h,i)=>{
+    let n = h.trim() || ("Column " + (i+1));
+    if (seen[n]){ seen[n]++; n = n + " (" + seen[n] + ")"; } else seen[n]=1;
+    return n;
+  });
+  return { delim, headers, rows: clean };
+}
+function toNum(s){
+  if (s == null) return null;
+  s = String(s).trim(); if (s==="") return null;
+  if (U.delim!=="," && /^[-+]?\d*,\d+$/.test(s)) s = s.replace(",", ".");
+  const x = Number(s);
+  return Number.isFinite(x) ? x : NaN;
+}
+
+/* example data (made-up) */
+const EX = { name:"example_plant_growth.csv",
+  g:["Control","Fertilized"],
+  a:[4.1,5.3,3.8,6.0,4.7,5.1,3.2,4.4,12.5,4.9],
+  b:[6.8,7.4,5.9,8.1,6.5,9.0,7.7,6.2,15.8,7.1] };
+const exCSV_A = () => "treatment,growth_cm\n" + EX.a.map(v=>"Control,"+v).join("\n") + "\n" + EX.b.map(v=>"Fertilized,"+v).join("\n") + "\n";
+const exCSV_B = () => "Control,Fertilized\n" + EX.a.map((v,i)=>v+","+EX.b[i]).join("\n") + "\n";
+function download(name, text){
+  const url = URL.createObjectURL(new Blob([text], {type:"text/csv"}));
+  const a = document.createElement("a"); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+}
+$("exDlA").addEventListener("click",()=>download("example_layout_A.csv", exCSV_A()));
+$("exDlB").addEventListener("click",()=>download("example_layout_B.csv", exCSV_B()));
+$("exLoad").addEventListener("click",()=>loadText(exCSV_A(), EX.name + " (made-up example data)"));
+$("csvFile").addEventListener("change", e=>{
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  if (f.size > 50*1024*1024){ uErr("uErr","That file is larger than 50 MB. Please upload a smaller CSV."); return; }
+  const r = new FileReader();
+  r.onload = () => loadText(String(r.result), f.name);
+  r.onerror = () => uErr("uErr","Sorry, that file couldn't be read. Try saving it again as a CSV.");
+  r.readAsText(f);
+  e.target.value = "";
+});
+
+function hideSteps(){ ["u2","u3","u4"].forEach(id=>$(id).hidden=true); $("uWait").hidden=false; U.diffs=null; }
+function fillSel(sel, opts, val){
+  sel.innerHTML = opts.map((o,i)=>`<option value="${i}">${esc(o)}</option>`).join("");
+  if (val!=null && val>=0 && val<opts.length) sel.value = String(val);
+}
+function loadText(text, name){
+  uErr("uErr"); uErr("uErr2");
+  if (/^\s*PK/.test(text.slice(0,4)) || /[\u0000-\u0008]/.test(text.slice(0,2000))){
+    hideSteps(); $("uLoaded").hidden=true;
+    uErr("uErr","This looks like an Excel file (.xlsx), not a CSV. In Excel, use File → Save As → CSV UTF-8, then upload that file.");
+    return;
+  }
+  const P = parseCSV(text);
+  if (P.headers.length < 2 || P.rows.length < 2){
+    hideSteps(); $("uLoaded").hidden=true;
+    uErr("uErr","We couldn't find at least two columns and two rows of data. Check that the file is a CSV with column names in the first row.");
+    return;
+  }
+  U.delim=P.delim; U.headers=P.headers; U.rows=P.rows; U.fileName=name;
+  U.numFrac = U.headers.map((h,j)=>{ let n=0,t=0; for (const r of U.rows){ const v=toNum(r[j]); if (v===null) continue; t++; if (!Number.isNaN(v)) n++; } return t ? n/t : 0; });
+  const numCols = U.numFrac.map((f,j)=>f>=0.8?j:-1).filter(j=>j>=0);
+  const txtCols = U.numFrac.map((f,j)=>f<0.5?j:-1).filter(j=>j>=0);
+  const layout = (txtCols.length===0 && numCols.length>=2) ? "wide" : "long";
+  document.querySelector(`input[name=layout][value=${layout}]`).checked = true;
+  const g = txtCols.length ? txtCols[0] : 0;
+  const v = numCols.find(j=>j!==g);
+  fillSel($("gCol"), U.headers, g);
+  fillSel($("vCol"), U.headers, v!=null ? v : (g===0?1:0));
+  fillSel($("w1Col"), U.headers, numCols[0]!=null ? numCols[0] : 0);
+  fillSel($("w2Col"), U.headers, numCols[1]!=null ? numCols[1] : 1);
+  U.levelsKey = null;
+  // preview
+  const show = U.rows.slice(0,6);
+  $("uPreview").innerHTML = `<thead><tr><th>Row</th>${U.headers.map(h=>`<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>` +
+    show.map((r,i)=>`<tr><td>${i+2}</td>${U.headers.map((h,j)=>`<td>${esc(r[j]==null?"":r[j])}</td>`).join("")}</tr>`).join("") + "</tbody>";
+  $("uFileInfo").innerHTML = `Loaded <b>${esc(name)}</b>: ${comma(U.rows.length)} data rows, ${U.headers.length} columns. First rows (row 1 is the column names):`;
+  $("uLoaded").hidden = false;
+  rebuild();
+}
+document.querySelectorAll("input[name=layout]").forEach(r=>r.addEventListener("change",()=>{ U.levelsKey=null; rebuild(); }));
+["gCol","vCol"].forEach(id=>$(id).addEventListener("change",()=>{ U.levelsKey=null; rebuild(); }));
+["g1Sel","g2Sel","w1Col","w2Col"].forEach(id=>$(id).addEventListener("change",rebuild));
+
+function rebuild(){
+  uErr("uErr2"); $("uSkip").textContent="";
+  const layout = document.querySelector("input[name=layout]:checked").value;
+  $("longSel").hidden = layout!=="long"; $("wideSel").hidden = layout!=="wide";
+  let a=[], b=[], n1, n2, vname, blanks=0; const bad=[];
+  if (layout==="long"){
+    const gi=+$("gCol").value, vi=+$("vCol").value;
+    if (gi===vi){ hideSteps(); uErr("uErr2","Pick two different columns: one with group names and one with measurements."); return; }
+    const lv = new Map();
+    for (const r of U.rows){ const g=(r[gi]||"").trim(); if (g==="") continue; const v=toNum(r[vi]); if (v===null || Number.isNaN(v)) continue; lv.set(g,(lv.get(g)||0)+1); }
+    const levels=[...lv.keys()];
+    const key = gi+"|"+vi;
+    if (U.levelsKey!==key){
+      U.levels = levels; U.levelsKey = key;
+      fillSel($("g1Sel"), levels.map(l=>`${l} (n = ${lv.get(l)})`), 0);
+      fillSel($("g2Sel"), levels.map(l=>`${l} (n = ${lv.get(l)})`), 1);
+    }
+    if (levels.length<2){ hideSteps(); uErr("uErr2", levels.length===0 ? "No numeric measurements were found in the measurement column. Is the right column selected?" : `The group column has only one group ("${levels[0]}") with numeric measurements. Did you pick the right columns, or is your file in Layout B?`); return; }
+    const i1=+$("g1Sel").value, i2=+$("g2Sel").value;
+    if (i1===i2){ hideSteps(); uErr("uErr2","Group 1 and Group 2 are the same. Pick two different groups."); return; }
+    n1 = U.levels[i1]; n2 = U.levels[i2]; vname = U.headers[vi];
+    U.rows.forEach((r,ri)=>{
+      const g=(r[gi]||"").trim(); if (g!==n1 && g!==n2) return;
+      const v=toNum(r[vi]);
+      if (v===null){ blanks++; return; }
+      if (Number.isNaN(v)){ bad.push(`row ${ri+2}: "${String(r[vi]).trim()}"`); return; }
+      (g===n1?a:b).push(v);
+    });
+  } else {
+    const c1=+$("w1Col").value, c2=+$("w2Col").value;
+    if (c1===c2){ hideSteps(); uErr("uErr2","Pick two different columns for Group 1 and Group 2."); return; }
+    n1=U.headers[c1]; n2=U.headers[c2]; vname="value";
+    U.rows.forEach((r,ri)=>{
+      [[c1,a],[c2,b]].forEach(([c,arr])=>{
+        const v=toNum(r[c]);
+        if (v===null){ blanks++; return; }
+        if (Number.isNaN(v)){ bad.push(`row ${ri+2}, ${U.headers[c]}: "${String(r[c]).trim()}"`); return; }
+        arr.push(v);
+      });
+    });
+  }
+  if (a.length<2 || b.length<2){ hideSteps(); uErr("uErr2", `Each group needs at least 2 numeric values (found ${a.length} for ${n1} and ${b.length} for ${n2}).`); return; }
+  if (a.length+b.length > 100000){ hideSteps(); uErr("uErr2",`This app handles up to 100,000 values in total (these two groups have ${comma(a.length+b.length)}). Please use a smaller dataset.`); return; }
+  let msg = `Using ${comma(a.length)} values for ${n1} and ${comma(b.length)} for ${n2}.`;
+  if (layout==="long" && U.levels.length>2) msg += ` (${U.levels.length - 2} other group${U.levels.length>3?"s":""} in this column ${U.levels.length>3?"are":"is"} not included.)`;
+  if (blanks) msg += ` Skipped ${blanks} blank cell${blanks>1?"s":""}.`;
+  $("uSkip").textContent = msg;
+  if (bad.length){
+    uErr("uErr2", `Skipped ${bad.length} ${bad.length>1?"values that aren't numbers":"value that isn't a number"}, e.g. ${bad.slice(0,3).join("; ")}. Remove units or text from the measurement cells if these should be included.`);
+  }
+  U.a=a; U.b=b; U.n1=n1; U.n2=n2; U.vname=vname;
+  const pooled = a.concat(b), s = sd(pooled);
+  DEC = s>0 ? Math.max(0, Math.min(6, 2 - Math.floor(Math.log10(s)))) : 2;
+  resetRuns();
+  ["u2","u3"].forEach(id=>$(id).hidden=false); $("uWait").hidden=true;
+  renderExplore(); renderSetup();
+}
+
+/* Step 2: explore */
+function renderExplore(){
+  const {a,b,n1,n2} = U;
+  $("u2n1").textContent = n1; $("u2n2").textContent = n2;
+  $("u2lg1").textContent = n1; $("u2lg2").textContent = n2;
+  $("u2m1").textContent = `mean ${nf(mean(a))}`; $("u2d1").textContent = `n = ${a.length} · median ${nf(median(a))} · SD ${nf(sd(a))}`;
+  $("u2m2").textContent = `mean ${nf(mean(b))}`; $("u2d2").textContent = `n = ${b.length} · median ${nf(median(b))} · SD ${nf(sd(b))}`;
+  $("u2dl").textContent = `Observed difference (${n1} − ${n2})`;
+  $("u2obs").textContent = `means ${nfs(mean(a)-mean(b))}`;
+  $("u2obs2").textContent = `medians ${nfs(median(a)-median(b))}`;
+  $("uShufOut").textContent = "";
+  buildStrip();
+}
+function buildStrip(){
+  const svg=$("uStrip"), {a,b}=U, all=a.concat(b);
+  let lo=Infinity, hi=-Infinity; for (const v of all){ if (v<lo) lo=v; if (v>hi) hi=v; }
+  if (hi-lo<EPS){ lo-=1; hi+=1; }
+  const pad=(hi-lo)*0.05; lo-=pad; hi+=pad;
+  const ML=20, MR=20, X = v => ML + (v-lo)/(hi-lo)*(680-ML-MR);
+  U.X = X; U.rowY=[68,148];
+  const MAXDOTS = 3000, shown = Math.min(all.length, MAXDOTS);
+  const r = shown>1500 ? 2 : shown>300 ? 3 : 4.5;
+  let s="";
+  for (const g of [0,1]){
+    s += `<text x="${ML}" y="${U.rowY[g]-34}" style="font-weight:700;font-size:13px;fill:var(${g?"--g2":"--g1"})">${esc(g?U.n2:U.n1)}</text>`;
+    s += `<g id="uMk${g}"><line y1="${U.rowY[g]-28}" y2="${U.rowY[g]+28}" stroke="var(--ink)" stroke-width="2.5"/><text x="5" y="${U.rowY[g]-20}" style="fill:var(--ink);font-weight:700" id="uMkT${g}"></text></g>`;
+  }
+  s += `<line class="axis" x1="${ML}" x2="${680-MR}" y1="188" y2="188"/>`;
+  const xs = Number(niceStep(hi-lo, 7).toPrecision(6)), xd = Math.min(6,(String(xs).split(".")[1]||"").length);
+  for (let i=Math.ceil(lo/xs); i*xs<=hi+EPS; i++){ const v=i*xs, xv=X(v); s += `<line class="axis" x1="${xv}" x2="${xv}" y1="188" y2="193"/><text x="${xv}" y="207" text-anchor="middle">${fmt(v,xd)}</text>`; }
+  s += `<g id="uDots"></g>`;
+  svg.innerHTML = s;
+  const layer = $("uDots");
+  U.tok = all.map((v,i)=>({ v, orig: i<a.length?0:1, cur: i<a.length?0:1, jit:(Math.random()*2-1)*22 }));
+  // draw at most MAXDOTS dots (a random sample) so very large files stay fast
+  let idx = U.tok.map((t,i)=>i);
+  if (all.length > MAXDOTS){ for (let i=0;i<MAXDOTS;i++){ const j=i+Math.floor(Math.random()*(idx.length-i)); [idx[i],idx[j]]=[idx[j],idx[i]]; } idx = idx.slice(0,MAXDOTS); }
+  U.drawn = idx;
+  $("uSampleNote").textContent = all.length > MAXDOTS ? `The plot shows a random sample of ${comma(MAXDOTS)} of your ${comma(all.length)} values; all values are used in the calculations.` : "";
+  U.circ = idx.map(i=>U.tok[i]).map(t=>{
+    const c=document.createElementNS("http://www.w3.org/2000/svg","circle");
+    c.setAttribute("r", r); c.setAttribute("fill", t.orig?"var(--g2)":"var(--g1)"); c.setAttribute("fill-opacity", shown>300?0.6:0.85);
+    c.style.transition="transform .7s cubic-bezier(.4,.1,.2,1)";
+    layer.appendChild(c); return c;
+  });
+  placeStrip();
+}
+function placeStrip(){
+  const stat = $("uStat").value, f = stat==="median" ? median : mean;
+  U.drawn.forEach((ti,ci)=>{ const t=U.tok[ti]; U.circ[ci].style.transform = `translate(${U.X(t.v)}px,${U.rowY[t.cur]+t.jit}px)`; });
+  const g = [[],[]]; U.tok.forEach(t=>g[t.cur].push(t.v));
+  const m = g.map(f);
+  for (const k of [0,1]){
+    const mk=$("uMk"+k); mk.style.transition="transform .7s cubic-bezier(.4,.1,.2,1)"; mk.style.transform=`translateX(${U.X(m[k])}px)`;
+    $("uMkT"+k).textContent = `${stat} ${nf(m[k])}`;
+  }
+  $("u2lgm").textContent = `Vertical line = group ${stat}`;
+  return m;
+}
+$("uShuf").addEventListener("click",()=>{
+  const n1=U.a.length, lab=Array(n1).fill(0).concat(Array(U.b.length).fill(1));
+  for (let i=lab.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [lab[i],lab[j]]=[lab[j],lab[i]]; }
+  U.tok.forEach((t,i)=>t.cur=lab[i]);
+  const m = placeStrip(), stat=$("uStat").value, d=m[0]-m[1], obs=obsStat();
+  $("uShufOut").innerHTML = `One shuffle: ${esc(U.n1)} ${stat} ${nf(m[0])}, ${esc(U.n2)} ${stat} ${nf(m[1])}, difference <b>${nfs(d)}</b> (your real difference is ${nfs(obs)}).`;
+});
+$("uReal").addEventListener("click",()=>{ U.tok.forEach(t=>t.cur=t.orig); placeStrip(); $("uShufOut").textContent="Showing the real group labels."; });
+
+/* Step 3: setup + run */
+function obsStat(){ const f = $("uStat").value==="median" ? median : mean; return f(U.a)-f(U.b); }
+function renderSetup(){
+  const stat=$("uStat").value, sel=$("uAlt"), prev=sel.value||"two";
+  sel.innerHTML = `<option value="two">Two-sided (different)</option><option value="greater">One-sided: ${esc(U.n1)} larger</option><option value="less">One-sided: ${esc(U.n1)} smaller</option>`;
+  sel.value = prev;
+  const what = `${stat} ${U.vname==="value"?"value":esc(U.vname)}`;
+  const alt = sel.value==="two" ? `the ${what} differs between ${esc(U.n1)} and ${esc(U.n2)}`
+            : sel.value==="greater" ? `the ${what} is larger for ${esc(U.n1)} than for ${esc(U.n2)}`
+            : `the ${what} is smaller for ${esc(U.n1)} than for ${esc(U.n2)}`;
+  $("uHyp").innerHTML = `<b>Null hypothesis</b> H<sub>0</sub>: the ${what} is the same for ${esc(U.n1)} and ${esc(U.n2)}; the group labels don't matter.<br><b>Alternative</b> H<sub>A</sub>: ${alt}.<br><b>Observed difference</b> (${esc(U.n1)} − ${esc(U.n2)}) in ${stat}s: <b>${nfs(obsStat())}</b>`;
+}
+$("uStat").addEventListener("change",()=>{ resetRuns(); placeStrip(); renderSetup(); });
+$("uAlt").addEventListener("change",()=>{ renderSetup(); if (U.diffs) renderResult(); });
+$("uAlpha").addEventListener("change",()=>{ if (U.diffs) renderResult(); });
+
+function makeStatEngine(a,b,stat){
+  if (stat==="mean") return makeEngine(a,b);
+  const all=Float64Array.from(a.concat(b)), N=all.length, k=a.length;
+  const g1=new Float64Array(k), g2=new Float64Array(N-k);
+  const med = arr => { arr.sort(); const n=arr.length, m=n>>1; return n%2 ? arr[m] : (arr[m-1]+arr[m])/2; };
+  return function(){
+    for (let i=0;i<k;i++){ const j=i+Math.floor(Math.random()*(N-i)); const t=all[i]; all[i]=all[j]; all[j]=t; }
+    for (let i=0;i<k;i++) g1[i]=all[i];
+    for (let i=k;i<N;i++) g2[i-k]=all[i];
+    return med(g1)-med(g2);
+  };
+}
+function resetRuns(){
+  U.diffs=null; $("u4").hidden=true; $("uProg").textContent="";
+  $("uRun10").disabled=true; $("uRun10").textContent="2. Run 10,000 shuffles (final result)";
+}
+function runShuffles(N){
+  if (U.busy) return;
+  U.busy = true; $("uRun1").disabled = true; $("uRun10").disabled = true;
+  const stat=$("uStat").value, eng=makeStatEngine(U.a,U.b,stat);
+  const diffs=new Float64Array(N); let i=0; const tStart=performance.now();
+  U.runStat = stat;
+  (function step(){
+    const t0=performance.now();
+    while (i<N && performance.now()-t0<14){ for (let j=0;j<20 && i<N;j++) diffs[i++]=eng(); }
+    $("uProg").textContent = `Shuffling… ${comma(i)} of ${comma(N)}`;
+    if (i<N) { requestAnimationFrame(step); return; }
+    const secs=(performance.now()-tStart)/1000;
+    U.busy=false; $("uRun1").disabled=false; $("uRun10").disabled=false; U.diffs=diffs;
+    if (N<10000){
+      const est = secs*10;
+      $("uRun10").textContent = "2. Run 10,000 shuffles (final result)" + (est>5 ? ` · about ${est<90?Math.ceil(est)+" seconds":Math.ceil(est/60)+" minutes"}` : "");
+      $("uProg").textContent = `Quick check done (${comma(N)} shuffles). Now run 10,000 shuffles for your final result.`;
+    } else {
+      $("uProg").textContent = `Done: ${comma(N)} shuffles. This is your final result.`;
+    }
+    renderResult(); $("u4").hidden=false; $("u4").scrollIntoView({behavior:"smooth",block:"start"});
+  })();
+}
+$("uRun1").addEventListener("click",()=>runShuffles(1000));
+$("uRun10").addEventListener("click",()=>runShuffles(10000));
+
+/* Step 4: result */
+function logChoose(n,k){ let s=0; for (let i=1;i<=k;i++) s += Math.log(n-k+i) - Math.log(i); return s; }
+function renderResult(){
+  const diffs=U.diffs, N=diffs.length, stat=U.runStat, tail=$("uAlt").value, alpha=+$("uAlpha").value;
+  const f = stat==="median" ? median : mean;
+  const m1=f(U.a), m2=f(U.b), obs=m1-m2, thr=Math.abs(obs);
+  const eps = 1e-9*Math.max(1, thr, sd(U.a.concat(U.b)));
+  let L=0, R=0;
+  for (const d of diffs){
+    if (tail==="two"){ if (d<=-thr+eps) L++; else if (d>=thr-eps) R++; }
+    else if (tail==="greater"){ if (d>=obs-eps) R++; }
+    else { if (d<=obs+eps) L++; }
+  }
+  const C=L+R, p=(C+1)/(N+1), pTxt = p<0.001 ? p.toPrecision(2) : p.toFixed(3);
+  $("uHist").dataset.xlab = `Shuffled difference in ${stat}s (${U.n1} − ${U.n2})`;
+  drawHist($("uHist"), diffs, obs, 0, tail, DEC);
+  $("u4sub").textContent = `${comma(N)} shuffles · difference in ${stat}s · ${tail==="two"?"two-sided":"one-sided"} test`;
+  $("u4quick").hidden = N>=10000;
+  const box = (lab,val)=>`<div class="stat"><div class="lab">${lab}</div><div class="val">${val}</div></div>`;
+  if (tail==="two") $("uCounts").innerHTML = box("Total shuffles (N)",comma(N)) + box(`≤ −${nf(thr)} (left tail)`,comma(L)) + box(`≥ +${nf(thr)} (right tail)`,comma(R));
+  else $("uCounts").innerHTML = box("Total shuffles (N)",comma(N)) + box(tail==="greater"?`≥ ${nfs(obs)}`:`≤ ${nfs(obs)}`, comma(C)) + box("Observed difference", nfs(obs));
+  $("uForm").innerHTML = tail==="two"
+    ? `p = (<span class="hot">${comma(L)}</span> + <span class="hot">${comma(R)}</span> + 1) ÷ (${comma(N)} + 1) = <b>${pTxt}</b>`
+    : `p = (<span class="hot">${comma(C)}</span> + 1) ÷ (${comma(N)} + 1) = <b>${pTxt}</b>`;
+  const sig = p < alpha;
+  $("uVerdict").textContent = sig ? `p < ${alpha}, so we reject H₀.` : `p ≥ ${alpha}, so we fail to reject H₀.`;
+  const notes=[];
+  if (C===0) notes.push(`None of the shuffles was as extreme as your data, so p is the smallest value possible with ${comma(N)} shuffles. Running more shuffles would give a smaller, more precise p-value.`);
+  const lc = logChoose(U.a.length+U.b.length, U.a.length);
+  if (lc < Math.log(N)) notes.push(`With these sample sizes there are only ${comma(Math.round(Math.exp(lc)))} different ways to split the values into two groups, so many shuffles repeat. The p-value is still valid, but the null distribution has gaps.`);
+  if (stat==="median" && (U.a.length<6 || U.b.length<6)) notes.push("With very small groups, medians can only take a few values, so the histogram may look blocky.");
+  $("uNotes").textContent = notes.join(" ");
+  const what = `${stat} ${U.vname==="value"?"value":U.vname}`;
+  const tailTxt = tail==="two" ? "as extreme as or more extreme than the observed difference (in either direction)" : tail==="greater" ? "as large as or larger than the observed difference" : "as small as or smaller than the observed difference";
+  const concl = sig
+    ? (tail==="two" ? `there is evidence that the ${what} differs between ${U.n1} and ${U.n2}.` : `there is evidence that the ${what} is ${tail==="greater"?"larger":"smaller"} for ${U.n1} than for ${U.n2}.`)
+    : `a difference this large could easily arise by chance, so there is not enough evidence that the ${what} ${tail==="two"?"differs between the groups":(tail==="greater"?"is larger":"is smaller")+" for "+U.n1}.`;
+  U.summary = `A randomization test with ${comma(N)} shuffles compared the ${what} of ${U.n1} (n = ${U.a.length}, ${stat} = ${nf(m1)}) and ${U.n2} (n = ${U.b.length}, ${stat} = ${nf(m2)}). The observed difference (${U.n1} − ${U.n2}) was ${nfs(obs)}. ${comma(C)} of the ${comma(N)} shuffled differences were ${tailTxt}, giving ${tail==="two"?"a two-sided":"a one-sided"} p = ${pTxt}. Because p ${sig?"<":"≥"} ${alpha}, we ${sig?"reject":"fail to reject"} the null hypothesis: ${concl}`;
+  if (N<10000) U.summary = "[Quick check only: run 10,000 shuffles for the final result.] " + U.summary;
+  $("uSummary").textContent = U.summary;
+}
+$("uCopy").addEventListener("click",()=>{
+  const done=()=>{ $("uCopy").textContent="Copied!"; setTimeout(()=>$("uCopy").textContent="Copy result summary",1500); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(U.summary).then(done, fallback); else fallback();
+  function fallback(){ const t=document.createElement("textarea"); t.value=U.summary; document.body.appendChild(t); t.select(); try{ document.execCommand("copy"); done(); }catch(e){} t.remove(); }
+});
+$("uDl").addEventListener("click",()=>{
+  if (!U.diffs) return;
+  let s = `shuffle,difference_in_${U.runStat}s\n`; U.diffs.forEach((d,i)=>{ s += (i+1)+","+d+"\n"; });
+  download("randomization_shuffles.csv", s);
 });
 
 /* init */
