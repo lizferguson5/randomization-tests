@@ -6,7 +6,7 @@ An interactive lab for BIOL 200 (Lecture 11b, Nonparametric & Randomization Test
 
 ## What students do
 
-1. **Meet the data.** Pseudoscorpion females mated with the same male twice (SM, n = 77) or with two different males (DM, n = 72). Students see the group means and the observed difference in means (SM − DM = −0.84), which becomes the threshold for the test.
+1. **Meet the data.** Pseudoscorpion females mated with the same male twice (SM, n = 77) or with two different males (DM, n = 72). The response variable is the number of broods produced by female under each treatment. Students see the group means and the observed difference in means (SM − DM = −0.84), which becomes the threshold for the test.
 2. **Shuffle the labels once.** Each female keeps her real number of broods, but her group label is randomly reassigned (without replacement, keeping group sizes at 77 and 72). Dots keep the color of their real group so students can watch the labels mix.
 3. **Shuffle thousands of times.** Students add 10 to 10,000 shuffles and watch the null distribution build. Differences as extreme as ±0.84 are highlighted, and the two-tailed p-value updates live:
    `p = (left tail + right tail + 1) ÷ (N + 1)`
